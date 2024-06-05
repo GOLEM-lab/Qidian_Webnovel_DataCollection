@@ -1,0 +1,16 @@
+For Qidian:
+URL of the website: https://www.qidian.com/
+URL of a sample book: https://www.qidian.com/book/1036370336/
+URL of a sample Chapter: https://www.qidian.com/chapter/1036370336/745977561/
+
+For Webnovel:
+URL of a the webpage: https://www.webnovel.com/stories/novel
+URL of a sample book: https://www.webnovel.com/book/solo-leveling(only-i-level-up)_12507348206677105
+URL of a sample Chapter: https://www.webnovel.com/book/solo-leveling(only-i-level-up)_12507348206677105/chapter-1-prologue_33577813080596024
+
+
+
+Solutions:
+
+1) LightNovel crawler (https://github.com/dipu-bd/lightnovel-crawler) gets the books from webnovel.com. The disadvantage is you need to give the book url. It is a command-line tool.
+2) Think of using selenium wire to collect all the network traffic (https://github.com/wkeeling/selenium-wire)
