@@ -4,6 +4,7 @@ import re
 import sys
 import json
 import time
+import shutil
 import requests
 import numpy as np
 import pandas as pd
@@ -62,37 +63,53 @@ def get_segmentComments(bookId,chapterId,segmentId,referer):
       break
   return comments
 
+def join_segments(chapterId):
+    csv_files = os.listdir("data/qidianReviewsBySegment/" + bookId + '/' + str(chapterId))
+    df = pd.DataFrame()
+    for csv_file in csv_files:
+        try:
+          temp_df = pd.read_csv("data/qidianReviewsBySegment/" + bookId + '/' + str(chapterId) + '/' + csv_file)
+          df = pd.concat([df,temp_df],ignore_index=True)
+          df = df.reset_index(drop=True)
+        except pd.errors.EmptyDataError:
+          pass
+    df.to_csv("data/qidianReviews/" + bookId + '/' + str(chapterId) + '.csv',index=False)
+
+
 def get_Comments(bookId,chapterIds):
   print('Total number of chapters', len(chapterIds))
   referers = ['wwww.google.com','www.qidian.com','www.bing.com','www.duckduckgo.com','www.baidu.com']
-  noComment = []
+  bookCommentSummary = pd.read_csv('data/qidianFreeChapterMeta/' + bookId + '.csv')
+  
   for chapterId in chapterIds:
-    try:
+      try:
+        os.mkdir("data/qidianReviewsBySegment/" + bookId + '/' + str(chapterId))
+      except OSError:
+        pass
       print('Chapter ',chapterId)
       i = np.random.randint(0,5)
       referer = referers[i]
-      commentSummary = get_chapterCommentSummary(bookId,chapterId,referer)
-      print('Number of segments in this chapter:',len(commentSummary))
-      chComments = []
-      if commentSummary.shape[0] != 0:
-        for segmentId in commentSummary['segmentId']:
-          segmentId = str(segmentId)
+      chapterCommentSummary = bookCommentSummary.loc[bookCommentSummary["qidianChapterId"] == chapterId]
+      print('Number of segments in this chapter:',len(chapterCommentSummary))
+      collectedSegmentIds = [id.replace('.csv','') for id in os.listdir("data/qidianReviewsBySegment/" + bookId + '/' + str(chapterId))]#ids are string
+      missingSegmnetIds = [id for id in chapterCommentSummary['segmentId'] if str(id) not in collectedSegmentIds] #ids are numerical
+      print('Number of remaining segments in this chapter:',len(missingSegmnetIds))
+      for segmentId in missingSegmnetIds:
+        segmentId = str(segmentId)
+        try:
           segmentComments = get_segmentComments(bookId,chapterId,segmentId,referer)
-          chComments += segmentComments
-          #time.sleep(50*np.random.random())
-        comments_df = pd.DataFrame(chComments)
-        print('Saving file',chapterId)
-        comments_df.to_csv('data/qidianReviews/' + bookId + '/' + chapterId + '.csv',index=False)
-        time.sleep(10*np.random.random())
+          segment_df = pd.DataFrame(segmentComments)
+          print('Saving segment file',segmentId)
+          segment_df.to_csv('data/qidianReviewsBySegment/' + bookId + '/' + str(chapterId) + '/' + str(segmentId) + '.csv',index=False)
+        except (ConnectionError,ValueError):
+          print('Connection Error. Waiting for a while!!')
+          time.sleep(200) #sleep 5 minutes
+      #segments of fully collected chapters are joined and moved to the qidianReview folder
+      if len(os.listdir("data/qidianReviewsBySegment/" + bookId + '/' + str(chapterId))) == len(chapterCommentSummary):
+        join_segments(chapterId)
+        shutil.rmtree("data/qidianReviewsBySegment/" + bookId + '/' + str(chapterId), ignore_errors=False)
       else:
-        noComment.append(chapterId)
-    except ConnectionError:
-      print('Connection Error. Saving what has been collected sofar and Waiting for a while!!')
-      comments_df.to_csv('data/qidianReviews_incomplete/' + bookId + '/' + chapterId + '.csv',index=False)
-      time.sleep(300) #sleep 5 minutes
-  with open('data/qidianNoCommentChapterIds/' + bookId + '.txt','a') as f:
-    for id in noComment:
-      f.writelines(id + '\n')
+        pass
 
 
 if __name__ == "__main__":
@@ -100,12 +117,13 @@ if __name__ == "__main__":
   bookId = sys.argv[1]
   print(bookId)
   print('---------------')
-  with open('data/qidianFreeChapterIds/' + bookId + '.txt', 'r') as f:
-    chapterIds = [b.strip() for b in f.readlines()]
+  #In FreeChapterMeta files only the chapters with comments are present. So I do not need to worry about the chapters withour comment
+  dfMeta = pd.read_csv('data/qidianFreeChapterMeta/' + bookId + '.csv')
+  chapterIds = dfMeta['qidianChapterId'].unique()
   fileList = os.listdir('data/qidianReviews/' + bookId)
   collectedIds = [file.split('.')[0] for file in fileList]
-  missingIds = [id for id in chapterIds if id not in collectedIds]
-  #chapterIds = ['413043721', '413046082', '413046889', '414056259', '414115182', '414145253', '414262319', '414262459', '414608351', '414638975', '414797898', '414858894', '414883901', '415024650', '415194462', '415279173', '415307714', '415383820', '415408941', '415476253', '415504312', '415504752', '415574607', '415663057', '415666269', '415771109', '415771296', '415771449', '415928643', '415928819', '416043076', '416043325', '416116050', '416116251', '416204803', '416204882', '416295707', '416296482', '416412185', '416486846', '416512818', '416574679', '416620074', '416690926', '416692941', '416777099', '416777222', '416868023', '416885978', '416886205', '417012721', '417012793', '417122580', '417122813', '417236153', '417236281', '417318587', '417318821', '417428499', '417516699', '417540809', '417540978', '417640691', '417716071', '417737588', '417737897', '417858623', '417942762', '417989667', '418113046', '418185071', '418305952', '418332486', '418397318', '418419873', '418496765', '418587646', '418700240', '418732673', '418732947', '418862780', '418939292', '418987857', '419074516', '419160451', '419242513', '419242838', '419338230', '419346306', '419346402', '419494715', '419581202', '419622717', '419622955', '419808435', '419893409', '419930462', '419930564', '420042802', '420114484', '420143063', '420143191', '420233617', '420233983', '420329615', '420329763', '420465009', '420466743', '420574341', '420574863', '420680586', '420680666', '420831489', '420831910', '420959597', '420960367', '421077630', '421078072', '421217166', '421217463', '421314774', '421317646']
+  missingIds = [id for id in chapterIds if str(id) not in collectedIds]
+  print(missingIds)
   get_Comments(bookId,missingIds)
   
 
