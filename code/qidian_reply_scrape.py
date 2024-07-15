@@ -61,31 +61,59 @@ def join_replies(bookId):
 
 
 if __name__ == "__main__":
-   bookId = sys.argv[1]
-   print(bookId)
-   print('---------------')
-   comments_df = pd.read_csv('data/qidianReviewsByBook/' + bookId + '.csv')
-   commentIdsWithReplies = comments_df['rootReviewId'].loc[comments_df['rootReviewReplyCount']!=0]
-   print('Number of Comments with Replies', len(commentIdsWithReplies))
-   collectedSegmentIds = [id.replace('.csv','') for id in os.listdir("data/qidianRepliesByComment/" + bookId)]#ids are string
-   missingCommentIdsWithReplies = [id for id in commentIdsWithReplies if str(id) not in collectedSegmentIds]#ID IS NUMERICAL
-   print('Number of Missing Comment Replies',len(missingCommentIdsWithReplies))
-   for id in missingCommentIdsWithReplies: #temp fix for 102342
-    commentId = str(id)
-    print('\t', commentId)
-    try:
-      replies = []
-      replies += get_Replies(commentId)
-      replies_df = pd.DataFrame(replies)
-      replies_df.to_csv("data/qidianRepliesByComment/" + bookId + '/' + commentId + '.csv',index=False)
-      #time.sleep(10*np.random.random())
-    except (ConnectionError,ValueError):
-      print('\t Connection Error Value. Waiting for a while!!')
-      time.sleep(100) #sleep 100 seconds
-    except KeyError:
-      print('\t Key Error. Moving to the next one')
-   if len(os.listdir("data/qidianRepliesByComment/" + bookId)) == len(commentIdsWithReplies):
-    join_replies(bookId)
-    shutil.rmtree("data/qidianRepliesByComment/" + bookId, ignore_errors=False)
-   else:
-    pass
+  bookId = sys.argv[1]
+  print(bookId)
+  print('---------------')
+  #comments_df = pd.read_csv('data/qidianReviewsByBook/' + bookId + '.csv',dtype={'rootReviewId':'string'})
+  #commentIdsWithReplies = comments_df[comments_df['rootReviewReplyCount']!=0]
+  #reviewIds = commentIdsWithReplies['reviewId'].values.tolist()
+  #print('Number of Comments with Replies', len(reviewIds))
+  #collectedSegmentIds = [id.replace('.csv','') for id in os.listdir("data/qidianRepliesByComment/" + bookId)]#ids are string
+  #missingCommentIdsWithReplies = [str(id) for id in reviewIds if str(id) not in collectedSegmentIds]#ids are string
+  #print('Number of Missing Comment Replies',len(missingCommentIdsWithReplies))
+  missingCommentIdsWithReplies = pd.read_csv('data/' + bookId + '_problems.csv',dtype={'id':'string'})
+  print('Number of Missing Comment Replies',len(missingCommentIdsWithReplies))
+  for commentId in missingCommentIdsWithReplies['id']:
+      commentId = str(commentId)
+      print('\t', commentId)
+      try:
+          replies = []
+          replies += get_Replies(commentId)
+          replies_df = pd.DataFrame(replies)
+          replies_df.to_csv("data/qidianRepliesByComment/" + bookId + '/' + commentId + '.csv',index=False)
+          #time.sleep(10*np.random.random())
+      except (ConnectionError,ValueError):
+          print('\t Connection Error Value. Waiting for a while!!')
+          time.sleep(100) #sleep 100 seconds
+      except KeyError:
+          print('\t Key Error. Moving to the next one')
+
+
+
+
+   #comments_df = pd.read_csv('data/qidianReviewsByBook/' + bookId + '.csv',dtype={'rootReviewId':str})
+   #commentIdsWithReplies = comments_df['rootReviewId'].loc[comments_df['rootReviewReplyCount']!=0]
+   #print('Number of Comments with Replies', len(commentIdsWithReplies))
+   #collectedSegmentIds = [id.replace('.csv','') for id in os.listdir("data/qidianRepliesByComment/" + bookId)]#ids are string
+   #missingCommentIdsWithReplies = [id for id in commentIdsWithReplies if id not in collectedSegmentIds]#ids are string
+   #print('Number of Missing Comment Replies',len(missingCommentIdsWithReplies))
+   #for id in missingCommentIdsWithReplies:
+   # commentId = str(id) #not needed but ...
+   # print('\t', commentId)
+   # try:
+   #   replies = []
+   #   replies += get_Replies(commentId)
+   #   replies_df = pd.DataFrame(replies)
+   #   replies_df.to_csv("data/qidianRepliesByComment/" + bookId + '/' + commentId + '.csv',index=False)
+   #   #time.sleep(10*np.random.random())
+   # except (ConnectionError,ValueError):
+   #   print('\t Connection Error Value. Waiting for a while!!')
+   #   time.sleep(100) #sleep 100 seconds
+   # except KeyError:
+   #   print('\t Key Error. Moving to the next one')
+   #   f.write(str(id) + '\n')
+   #if len(os.listdir("data/qidianRepliesByComment/" + bookId)) == len(commentIdsWithReplies):
+   # join_replies(bookId)
+   # shutil.rmtree("data/qidianRepliesByComment/" + bookId, ignore_errors=False)
+   #else:
+   # pass

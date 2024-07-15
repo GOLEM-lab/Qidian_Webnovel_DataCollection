@@ -65,21 +65,29 @@ def get_UserHistory(userId):
 
     return list(footprintData.values())
 
-if __name__ == "__main__":
-    df = pd.read_csv('/home/atatar/Documents/CIT/Calls/Ze/data/qidianReviews/1039430/21372981.csv')
-    userIds = df['userId'].unique()
+def main():
+    df = pd.read_csv('data/userList2.csv',dtype={'ids':'string'})
+    userIds = df['ids'].unique()
+    print(len(userIds))
     usersAll = []
-    for userId in userIds:
-        print(userId)
-        userInfo = get_UserInfo(userId)
-        userHistory = get_UserHistory(userId)
-        userAll = userInfo + userHistory
-        usersAll.append(userAll)
+    for userId in tqdm(userIds[:2000]):
+        try:
+            userInfo = get_UserInfo(userId)
+            userHistory = get_UserHistory(userId)
+            userAll = userInfo + userHistory
+            usersAll.append(userAll)
+        except:
+            print(userId)
+            pass
+    return usersAll
 
+
+if __name__ == "__main__":
+    usersAll = main()
     colnames = ['userId','levelInfo','genderInfo','nameInfo','numberOfFollowers','numberOfFans','bookshelfCollection','subscribedWorks',
                 'rewardedWorks','monthlyVotes','recommendationVotes']
     df = pd.DataFrame(usersAll,columns=colnames)
-    df.to_csv('data/qidianUserProfilesSample.csv',index=False)
+    df.to_csv('data/qidianUserProfiles25.csv',index=False)
 
 
 
