@@ -8,7 +8,9 @@ import pandas as pd
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
 
-
+# This function with the currect querystring and headers should work.
+# But if you receive connection error, it may be because _csrfToken in querystring and/or cookie in the headers are expired.
+# update them 
 def get_UserInfo(userId):
     userId = str(userId)
     userUrl = 'https://my.qidian.com/user/' + userId
@@ -34,16 +36,12 @@ def get_UserInfo(userId):
         numberOfFans = np.nan
     else:
         numberOfFans = int(numberOfFans)
-
-    #pattern = r'\D*([0-9]*)\D+'
-    #favoriteBooks = soup.find_all('h2',{'class':"user-title"})
-    #if favoriteBooks:
-    #    favoriteBooks = favoriteBooks[0].text
-    #    numberOfFavoriteBooks = re.findall(pattern,favoriteBooks)[0]
-    #else:
-    #    numberOfFavoriteBooks = np.nan
     return [userId,levelInfo,genderInfo,nameInfo,numberOfFollowers,numberOfFans]
 
+
+# This function with the currect querystring and headers should work.
+# But if you receive connection error, it may be because _csrfToken in querystring and/or cookie in the headers are expired.
+# update them 
 def get_UserHistory(userId):
     userId = str(userId)
     url = "https://my.qidian.com/ajax/User/FriendHistory"
@@ -66,11 +64,11 @@ def get_UserHistory(userId):
     return list(footprintData.values())
 
 def main():
-    df = pd.read_csv('data/userList2.csv',dtype={'ids':'string'})
+    df = pd.read_csv('data/userList.csv',dtype={'ids':'string'})
     userIds = df['ids'].unique()
     print(len(userIds))
     usersAll = []
-    for userId in tqdm(userIds[:2000]):
+    for userId in tqdm(userIds):
         try:
             userInfo = get_UserInfo(userId)
             userHistory = get_UserHistory(userId)
@@ -87,7 +85,7 @@ if __name__ == "__main__":
     colnames = ['userId','levelInfo','genderInfo','nameInfo','numberOfFollowers','numberOfFans','bookshelfCollection','subscribedWorks',
                 'rewardedWorks','monthlyVotes','recommendationVotes']
     df = pd.DataFrame(usersAll,columns=colnames)
-    df.to_csv('data/qidianUserProfiles25.csv',index=False)
+    df.to_csv('data/qidianUserProfiles.csv',index=False)
 
 
 

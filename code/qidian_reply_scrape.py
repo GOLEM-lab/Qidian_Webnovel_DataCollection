@@ -13,7 +13,6 @@ from bs4 import BeautifulSoup as bs
 from requests.exceptions import ConnectionError
 
 # find comments with replies
-# what if there are more than 20 replies THIS COULD BE IMPORTANT
 
 def get_Replies(reviewId):
   urlReplies = "https://www.qidian.com/ajax/chapterReview/quoteReviewList"
@@ -64,16 +63,14 @@ if __name__ == "__main__":
   bookId = sys.argv[1]
   print(bookId)
   print('---------------')
-  #comments_df = pd.read_csv('data/qidianReviewsByBook/' + bookId + '.csv',dtype={'rootReviewId':'string'})
-  #commentIdsWithReplies = comments_df[comments_df['rootReviewReplyCount']!=0]
-  #reviewIds = commentIdsWithReplies['reviewId'].values.tolist()
-  #print('Number of Comments with Replies', len(reviewIds))
-  #collectedSegmentIds = [id.replace('.csv','') for id in os.listdir("data/qidianRepliesByComment/" + bookId)]#ids are string
-  #missingCommentIdsWithReplies = [str(id) for id in reviewIds if str(id) not in collectedSegmentIds]#ids are string
-  #print('Number of Missing Comment Replies',len(missingCommentIdsWithReplies))
-  missingCommentIdsWithReplies = pd.read_csv('data/' + bookId + '_problems.csv',dtype={'id':'string'})
+  comments_df = pd.read_csv('data/qidianReviews/' + bookId + '.csv',dtype={'rootReviewId':'string'})
+  commentIdsWithReplies = comments_df[comments_df['rootReviewReplyCount']!=0]
+  reviewIds = commentIdsWithReplies['reviewId'].values.tolist()
+  print('Number of Comments with Replies', len(reviewIds))
+  collectedSegmentIds = [id.replace('.csv','') for id in os.listdir("data/qidianRepliesByComment/" + bookId)]#ids are string
+  missingCommentIdsWithReplies = [str(id) for id in reviewIds if str(id) not in collectedSegmentIds]
   print('Number of Missing Comment Replies',len(missingCommentIdsWithReplies))
-  for commentId in missingCommentIdsWithReplies['id']:
+  for commentId in missingCommentIdsWithReplies:
       commentId = str(commentId)
       print('\t', commentId)
       try:
@@ -87,7 +84,13 @@ if __name__ == "__main__":
           time.sleep(100) #sleep 100 seconds
       except KeyError:
           print('\t Key Error. Moving to the next one')
-
+  #commnents with all repkies collected are  are joined and moved to the qidianReplies folder
+  #repliesbycomment folder of that comment is deleted!
+  if len(os.listdir("data/qidianRepliesByComment/" + bookId)) == len(commentIdsWithReplies):
+    join_replies(bookId)
+    shutil.rmtree("data/qidianRepliesByComment/" + bookId, ignore_errors=False)
+  else:
+     pass
 
 
 

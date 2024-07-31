@@ -1,13 +1,18 @@
+import os
 import sys
 import pandas as pd
-from glob import glob
-
+# You can run this code for a single book or for all books using the looper.sh(bash looper.sh).
+# Make sure that qidianReviews folder exists in your data folder. 
 
 def create_Book(bookId):
     book_df = pd.DataFrame()
-    for chapter in glob('data/qidianReviews/' + bookId + '/*.csv'):
+    for chapter in os.listdir('data/qidianReviewsByChapter/' + bookId):
         try:
-            chapter_df = pd.read_csv(chapter)
+            chapterId = chapter.split('.')[0]
+            chapterfile = os.path.join('data/qidianReviewsByChapter/',bookId,chapter)
+            chapter_df = pd.read_csv(chapterfile)
+            
+            chapter_df['chapterId'] =  str(chapterId)
             book_df = pd.concat([book_df,chapter_df],ignore_index=True)
         except pd.errors.EmptyDataError:
             pass
@@ -16,7 +21,7 @@ def create_Book(bookId):
     if book_df.shape[0]<x:
         print('Duplicates are dropped!')
     book_df = book_df.reset_index(drop=True)
-    book_df.to_csv('data/qidianReviewsByBook/' + bookId + '.csv',index=False)
+    book_df.to_csv('data/qidianReviews/' + bookId + '.csv',index=False)
 
 
 

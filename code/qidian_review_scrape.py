@@ -11,8 +11,15 @@ import pandas as pd
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
 from requests.exceptions import ConnectionError
+# In order for this code work on your computer, you shpudl first organize your data folder.
+# Create the subfolders, qidianReviewsBySegment with a subfolder per book named after the bookId, 
+# qidianReviewsByChapter with a subfolder per book named after the bookId.
+# to create these folders with subfolders you can run looper.sh (bash looper.sh) with mkdir command uncommented.
 
 
+# This function with the currect querystring and headers should work.
+# But if you receive connection error, it may be because _csrfToken in querystring and/or cookie in the headers are expired.
+# update them 
 def get_chapterCommentSummary(bookId,chapterId,referer):
   urlSummary = "https://www.qidian.com/ajax/chapterReview/reviewSummary"
   querystring = {"bookId":bookId,"chapterId":chapterId,"_csrfToken":"07cc5d3d-fb2b-4d08-8915-561aae1b4d86","w_tsfp":"ltvgWVEE2utBvS0Q6KzqnEymFjk7Z2R7xFw0D+M9Os09BqQiWpqF1YR+uNfldCyCt5Mxutrd9MVxYnGHUdUteREQQM6Vb5tH1VPHx8NlntdKRQJtA5LbDQMZK+4h6TZDdTkMLBbmjWwvJIETxORl3lwJ5SAm37ZlCa8hbMFbxl0yufqB0Jtsez6fxRXUEnT7J2MGf/jJ9p0y+OoJoni/oAamfRk9Frk0ghrNjlFLG3tX4BG7d+9UNxqlIdutXr5o/HO3l3uOPoWvrRUn4FYyuBc8C8D231qZbDQSRFQwMAangcokfP34M7Im7SxPDq4dVF1BqQcEves4/FlKCynsMSCOV/4uvQYSWuAIrZPzO3aUiojmMghZ6N0ulVs3u5IF7zhyZ2n3Ld5aSGHLZXMPeY0Aa5y7JjYgAhsGDmwPo0gENmpZXugibI6X7xC1KEpc1eMxbeTqf+AEaCjFAaLuDeA8CCPx"}
@@ -34,6 +41,10 @@ def get_chapterCommentSummary(bookId,chapterId,referer):
   return commentSummary
 
 #Comments
+# This function with the currect querystring and headers should work.
+# But if you receive connection error, it may be because _csrfToken in querystring and/or cookie in the headers are expired.
+# update them 
+
 def get_segmentComments(bookId,chapterId,segmentId,referer):
   urlComments = "https://www.qidian.com/ajax/chapterReview/reviewList"
   page = "1"
@@ -73,7 +84,7 @@ def join_segments(chapterId):
           df = df.reset_index(drop=True)
         except pd.errors.EmptyDataError:
           pass
-    df.to_csv("data/qidianReviews/" + bookId + '/' + str(chapterId) + '.csv',index=False)
+    df.to_csv("data/qidianReviewsByChapter/" + bookId + '/' + str(chapterId) + '.csv',index=False)
 
 
 def get_Comments(bookId,chapterIds):
@@ -84,7 +95,9 @@ def get_Comments(bookId,chapterIds):
   for chapterId in chapterIds:
       try:
         os.mkdir("data/qidianReviewsBySegment/" + bookId + '/' + str(chapterId))
+        print('folder created')
       except OSError:
+        print('folder exists')
         pass
       print('Chapter ',chapterId)
       i = np.random.randint(0,5)
@@ -104,7 +117,8 @@ def get_Comments(bookId,chapterIds):
         except (ConnectionError,ValueError):
           print('Connection Error. Waiting for a while!!')
           time.sleep(200) #sleep 5 minutes
-      #segments of fully collected chapters are joined and moved to the qidianReview folder
+      #segments of fully collected chapters are joined and moved to the qidianReviewByChapter folder
+      #segment folder of that chapter is deleted!
       if len(os.listdir("data/qidianReviewsBySegment/" + bookId + '/' + str(chapterId))) == len(chapterCommentSummary):
         join_segments(chapterId)
         shutil.rmtree("data/qidianReviewsBySegment/" + bookId + '/' + str(chapterId), ignore_errors=False)
@@ -120,7 +134,7 @@ if __name__ == "__main__":
   #In FreeChapterMeta files only the chapters with comments are present. So I do not need to worry about the chapters withour comment
   dfMeta = pd.read_csv('data/qidianFreeChapterMeta/' + bookId + '.csv')
   chapterIds = dfMeta['qidianChapterId'].unique()
-  fileList = os.listdir('data/qidianReviews/' + bookId)
+  fileList = os.listdir('data/qidianReviewsByChapter/' + bookId)
   collectedIds = [file.split('.')[0] for file in fileList]
   missingIds = [id for id in chapterIds if str(id) not in collectedIds]
   print(missingIds)
