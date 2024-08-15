@@ -9,11 +9,12 @@ do
    #python code/qidian_join_chapter_comments.py "${line}"
    #python code/qidian_reply_scrape.py "${line}"
    #python code/qidian_chapter_date_scrape.py "${line}"
-   #python code/webnovel_ChapterReview_scrape.py "${line}"
+   #python code/webnovel_ParagraphReview_scrape.py "${line}"
    #python code/webnovel_join_comments.py "${line}"
-   #python code/webnovel_ChapterReview_scrape_patch.py "${line}"
-   #python code/webnovel_join_with_addendum.py "${line}"
-   #python code/webnovel_ChapterReplies_scrape.py "${line}"
+   #python code/webnovel_ParagraphReplies_scrape.py "${line}"
+   #python code/webnovel_ChapterReview_scrape.py "${line}"
+   #python code/webnovel_ChapterReply_scrape.py "${line}"
+   python code/webnovel_join_Chapters.py "${line}"
    # you can also use this to create folders for every book
-   #mkdir data/webnovelReviews_ChapterByChapterByParagraph_Addendum/"${line}"
+   #mkdir data/webnovelReplies_Chapter_ByChapter/"${line}"
 done
